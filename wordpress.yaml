@@ -1,0 +1,80 @@
+---
+- name: Installs packages
+  become: yes
+  become_method: sudo
+  user: centos
+  hosts: all
+  tasks:
+  - name: Install wordpress
+    get_url:
+      url: https://wordpress.org/latest.tar.gz
+      dest: /var/www/html/
+
+  - name: Unarchive a file that is already on the remote machine
+    unarchive:
+      src: wordpress.org/latest.tar.gz
+      dest: /var/www/html/
+      remote_src: yes
+
+
+  - name: Install packages
+    package:
+      name: "{{item}}"
+      state: latest
+    with_items:
+    - telnet
+    - httpd
+    - epel-release
+    - mysql
+    - mariadb-server
+    - mariadb
+    - MySql-python
+    - yum-utils
+
+  - name: Change file ownership, group and permissions
+    file:
+      path: /var/www/html
+      owner: apache
+      group: apache
+
+  - name: Start service httpd, if not started
+    service:
+      name: httpd
+      state: started
+  - name: Enable service httpd, and not touch the state
+    service:
+      name: httpd
+      enabled: yes
+  
+  - name: starting mariadb
+    service:
+        name: mariadb
+        state: started
+        enabled: yes
+  
+  - name: SeLinux Disabled
+    selinux:
+      state: disabled
+
+  - name: Creating a user
+    mysql_user:
+      user: admin
+      password: SomethingSecure
+      priv: '*.*:ALL,GRANT'
+      state: present
+
+  - name: Creating wordpress
+    mysql_db:
+      name: wordpress
+      state: present
+
+  - name: install epel
+    shell: "sudo yum install http://rpms.remirepo.net/enterprise/remi-release-7.rpm -y"
+  
+  - name: config manager enabled
+    shell: "sudo yum-config-manager --enable remi-php73"
+  
+  - name: install php
+    shell: "sudo yum install php php-mysql -y"
+
+
