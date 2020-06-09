@@ -1,0 +1,17 @@
+---
+- name: Installs packages
+  become: yes
+  become_method: sudo
+  user: centos
+  hosts: all
+  tasks:
+  - name: Install telnet
+    package:
+      name: "{{item}}"
+      state: present
+    with_items:
+    - telnet
+    - gzip
+    - lftp
+    - httpd
+    - vsftpd
